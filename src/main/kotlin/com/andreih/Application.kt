@@ -21,6 +21,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.post
+import io.ktor.server.resources.put
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.vertx.core.Vertx
@@ -33,6 +34,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 
 fun main(): Unit = SuspendApp {
     val env = Env()
@@ -80,12 +82,30 @@ fun main(): Unit = SuspendApp {
                     taskRepository
                         .find(TaskId(resource.id))
                         .onLeft { call.respond(HttpStatusCode.InternalServerError, it.message) }
+                        .onRight {
+                            it.fold(
+                                ifEmpty = { call.respond(JsonNull) },
+                                ifSome = { task -> call.respond(task) })
+                        }
+                }
+
+                delete<Tasks.Id> { resource ->
+                    taskRepository
+                        .delete(TaskId(resource.id))
+                        .onLeft { call.respond(HttpStatusCode.InternalServerError, it.message) }
                         .onRight { call.respond(it) }
                 }
 
                 post<Tasks> {
                     taskRepository
                         .create(call.receive<TaskCreatable>())
+                        .onLeft { call.respond(HttpStatusCode.InternalServerError, it.message) }
+                        .onRight { call.respond(it) }
+                }
+
+                put<Tasks.Id.Done> { resource ->
+                    taskRepository
+                        .markAsDone(TaskId(resource.parent.id))
                         .onLeft { call.respond(HttpStatusCode.InternalServerError, it.message) }
                         .onRight { call.respond(it) }
                 }

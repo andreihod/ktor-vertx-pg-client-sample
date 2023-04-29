@@ -13,13 +13,13 @@ data class Env(
     val http: Http = Http(),
 ) {
     data class Http(
-        val host: String = System.getenv("HOST") ?: "localhost",
+        val host: String = System.getenv("SERVER_HOST") ?: "localhost",
         val port: Int = System.getenv("SERVER_PORT")?.toIntOrNull() ?: HTTP_PORT,
     )
 
     data class DataSource(
         val host: String = System.getenv("DB_HOST") ?: DB_HOST,
-        val port: Int = System.getenv("DB_PORT").toIntOrNull() ?: DB_PORT,
+        val port: Int = System.getenv("DB_PORT")?.toInt() ?: DB_PORT,
         val database: String = System.getenv("DB_DATABASE") ?: DB_DATABASE,
         val user: String = System.getenv("DB_USER") ?: DB_USER,
         val password: String = System.getenv("DB_PASSWORD") ?: DB_PASSWORD,
